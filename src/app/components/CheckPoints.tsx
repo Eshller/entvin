@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -13,14 +13,82 @@ import {
   FormControlLabel,
   Checkbox,
 } from '@mui/material';
+import { useCompliance } from '../context/ComplianceContext';
+import regulatoryComplianceRules from '../constants';
 
-interface CheckPointsProps {
-  selectedModules: string[];
-}
+// Define the type for selectedRules
+type SelectedRule = {
+  rule: string;
+  explainerText: string;
+};
 
-const CheckPoints: React.FC<CheckPointsProps> = ({ selectedModules }) => {
-  console.log('these are the selected modules: ', selectedModules);
-  // Function to render Accordion for each selected module
+const CheckPoints: React.FC = () => {
+  const [checkAll, setCheckAll] = useState(false);
+  const [checkedCheckpoints, setCheckedCheckpoints] = useState<string[]>([]);
+  const {
+    selectedModules,
+    setSelectedModules,
+    selectedRules,
+    setSelectedRules,
+  } = useCompliance();
+
+  useEffect(() => {
+    // Reset checked checkpoints and selectedRules when selectedModules change
+    setCheckAll(false);
+    setCheckedCheckpoints([]);
+    setSelectedRules([]);
+  }, [selectedModules]);
+
+  const handleCheckAllChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const isChecked = event.target.checked;
+    setCheckAll(isChecked);
+    if (isChecked) {
+      const allSelectedRules = regulatoryComplianceRules.map((rule) => ({
+        rule: rule.rule,
+        explainerText: rule.explainerText,
+      }));
+      setCheckedCheckpoints(allSelectedRules.map((rule) => rule.rule));
+      setSelectedRules(allSelectedRules);
+    } else {
+      setCheckedCheckpoints([]);
+      setSelectedRules([]);
+    }
+  };
+
+  const handleCheckboxChange =
+    (checkpoint: string, explainerText: string) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const isChecked = event.target.checked;
+      if (isChecked) {
+        setCheckedCheckpoints((prevChecked) => [...prevChecked, checkpoint]);
+        setSelectedRules((prevRules) => [
+          ...prevRules,
+          { rule: checkpoint, explainerText: explainerText },
+        ]);
+      } else {
+        setCheckedCheckpoints((prevChecked) =>
+          prevChecked.filter((item) => item !== checkpoint)
+        );
+        setSelectedRules((prevRules) =>
+          prevRules.filter((item) => item.rule !== checkpoint)
+        );
+      }
+      if (!isChecked) {
+        setCheckAll(false);
+      } else if (
+        checkedCheckpoints.length + 1 ===
+        regulatoryComplianceRules.length
+      ) {
+        setCheckAll(true);
+      }
+    };
+
+  useEffect(() => {
+    console.log('checked points', checkedCheckpoints);
+    console.log('selected modules', selectedModules);
+    console.log('selected rules', selectedRules);
+  }, [checkedCheckpoints, selectedModules, selectedRules]);
+
   const renderAccordions = () => {
     return selectedModules?.map((module, index) => (
       <Accordion
@@ -48,7 +116,12 @@ const CheckPoints: React.FC<CheckPointsProps> = ({ selectedModules }) => {
                 <TableCell>S.No.</TableCell>
                 <TableCell>
                   <FormControlLabel
-                    control={<Checkbox defaultChecked />}
+                    control={
+                      <Checkbox
+                        checked={checkAll}
+                        onChange={handleCheckAllChange}
+                      />
+                    }
                     label='Check All'
                   />
                 </TableCell>
@@ -56,23 +129,21 @@ const CheckPoints: React.FC<CheckPointsProps> = ({ selectedModules }) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              <TableRow>
-                <TableCell>1.</TableCell>
-                <TableCell>
-                  <Checkbox />
-                </TableCell>
-                <TableCell>
-                  Check and ensure to submit Environmental Assessment or Claim
-                  of Categorical Exclusion
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>2.</TableCell>
-                <TableCell>
-                  <Checkbox />
-                </TableCell>
-                <TableCell>Check and ensure to submit Environmental</TableCell>
-              </TableRow>
+              {regulatoryComplianceRules.map((rule, i) => (
+                <TableRow key={i}>
+                  <TableCell>{i + 1}.</TableCell>
+                  <TableCell>
+                    <Checkbox
+                      checked={checkedCheckpoints.includes(rule.rule)}
+                      onChange={handleCheckboxChange(
+                        rule.rule,
+                        rule.explainerText
+                      )}
+                    />
+                  </TableCell>
+                  <TableCell>{rule.rule}</TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </AccordionDetails>

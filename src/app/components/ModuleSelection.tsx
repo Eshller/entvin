@@ -2,22 +2,27 @@ import React, { useState } from 'react';
 import CustomDropdown from './CustomDropdown';
 import VertexSelection from './Vertices';
 import CheckPoints from './CheckPoints';
-import { useModules } from '../context/ModuleContext';
+import { useCompliance } from '../context/ComplianceContext';
 
 const ModuleSelection: React.FC = () => {
-  const { selectedModules, setSelectedModules } = useModules();
+  const { selectedModules, setSelectedModules } = useCompliance();
   const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(
     null
   );
 
   const handleSelectChange = (value: string) => {
-    if (!selectedModules.includes(value)) {
-      setSelectedModules([...selectedModules, value]);
+    if (!selectedModules || !selectedModules.includes(value)) {
+      setSelectedModules((prevSelectedModules) => [
+        ...(prevSelectedModules || []),
+        value,
+      ]);
     }
   };
 
   const handleDelete = (module: string) => {
-    setSelectedModules(selectedModules.filter((m) => m !== module));
+    setSelectedModules((prevSelectedModules) =>
+      prevSelectedModules?.filter((m) => m !== module)
+    );
   };
 
   const handleToggleDropdown = (index: number) => {
@@ -80,7 +85,7 @@ const ModuleSelection: React.FC = () => {
           ))}
         </div>
         <div className='flex space-x-2 mt-4'>
-          {selectedModules.map((module: string) => (
+          {selectedModules?.map((module: string) => (
             <span
               key={module}
               className='bg-[#FCFBFF] border-[#E4E4E4] border-[1px] px-4 py-2 rounded-full flex items-center'
@@ -114,7 +119,7 @@ const ModuleSelection: React.FC = () => {
         </div>
       </div>
       <VertexSelection />
-      <CheckPoints selectedModules={selectedModules} />
+      <CheckPoints selectedModules={selectedModules || []} />
     </div>
   );
 };

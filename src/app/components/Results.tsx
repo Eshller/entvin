@@ -22,10 +22,10 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 
-import { useModules } from '../context/ModuleContext';
+import { useCompliance } from '../context/ComplianceContext';
 
 const Results = () => {
-  const { selectedModules } = useModules();
+  const { selectedModules } = useCompliance();
   return (
     <Sheet>
       <div

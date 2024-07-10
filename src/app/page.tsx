@@ -1,14 +1,14 @@
 import MainContent from './components/MainContent';
 import Sidebar from './components/Sidebar';
-import { ModulesProvider } from './context/ModuleContext';
+import { ComplianceProvider } from './context/ComplianceContext';
 
 export default function Home() {
   return (
-    <ModulesProvider>
+    <ComplianceProvider>
       <div className='flex' style={{ fontFamily: 'Satoshi !important' }}>
         <Sidebar />
         <MainContent />
       </div>
-    </ModulesProvider>
+    </ComplianceProvider>
   );
 }

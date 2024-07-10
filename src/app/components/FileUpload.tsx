@@ -1,4 +1,4 @@
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import React, { useState } from 'react';
 import {
   Box,
   Button,
@@ -13,7 +13,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableRow,
   Checkbox,
   FormControlLabel,
@@ -22,37 +21,88 @@ import {
   Select,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import React, { useState, useCallback } from 'react';
-import { useModules } from '../context/ModuleContext';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { useCompliance } from '../context/ComplianceContext';
 
 const FileUpload = () => {
-  const [fileRTR, setFileRTR] = useState(null);
-  const [fileGeneral, setFileGeneral] = useState(null);
-  const [fileModule1, setFileModule1] = useState(null);
+  const [fileRTR, setFileRTR] = useState<File | null>(null);
+  const [fileGeneral, setFileGeneral] = useState<File | null>(null);
+  const [fileModule1, setFileModule1] = useState<File | null>(null);
+  const [assessment, setAssessment] = useState<string>('');
 
-  const { selectedModules } = useModules();
+  const { selectedModules, selectedRules } = useCompliance();
 
-  const handleDrop = useCallback((event, setFile) => {
-    event.preventDefault();
-    const droppedFile = event.dataTransfer.files[0];
-    setFile(droppedFile);
-  }, []);
-
-  const handleFileSelect = (event, setFile) => {
-    const selectedFile = event.target.files[0];
-    setFile(selectedFile);
+  const handleFileSelect = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    setFile: React.Dispatch<React.SetStateAction<File | null>>
+  ) => {
+    const selectedFile = event.target.files && event.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+    }
   };
 
-  const handleDelete = (setFile) => {
+  const handleDelete = (
+    setFile: React.Dispatch<React.SetStateAction<File | null>>
+  ) => {
     setFile(null);
   };
 
-  const [assessment, setAssessment] = React.useState('');
+  const handleUpload = async (file: File | null, module: string) => {
+    if (!file) return;
 
-  const handleChange = (event: SelectChangeEvent) => {
-    setAssessment(event.target.value as string);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('module', module);
+
+      const response = await fetch('http://localhost:8000/api/upload-pdf/', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Referencessss:  ', data.references);
+        console.log('Checked: ', selectedRules);
+        // Reset file state after successful upload
+        switch (module) {
+          case 'RTR':
+            setFileRTR(null);
+            break;
+          case 'General':
+            setFileGeneral(null);
+            break;
+          case 'Module 1':
+            setFileModule1(null);
+            break;
+          default:
+            break;
+        }
+      } else {
+        console.error('Failed to upload file');
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+    }
   };
-  const renderUploadBox = (file, setFile, label) =>
+
+  const handleDrop = (
+    event: React.DragEvent<HTMLDivElement>,
+    setFile: React.Dispatch<React.SetStateAction<File | null>>
+  ) => {
+    event.preventDefault();
+    const file = event.dataTransfer.files[0];
+    if (file) {
+      setFile(file);
+    }
+  };
+
+  const renderUploadBox = (
+    file: File | null,
+    setFile: React.Dispatch<React.SetStateAction<File | null>>,
+    label: string
+  ) =>
     file ? null : (
       <Box
         sx={{
@@ -96,7 +146,11 @@ const FileUpload = () => {
       </Box>
     );
 
-  const renderFileDisplay = (file, setFile, label) =>
+  const renderFileDisplay = (
+    file: File | null,
+    setFile: React.Dispatch<React.SetStateAction<File | null>>,
+    label: string
+  ) =>
     file && (
       <Box
         key={label}
@@ -155,10 +209,64 @@ const FileUpload = () => {
                     {module}
                   </Typography>
                 </Grid>
-                {renderFileDisplay(fileRTR, setFileRTR, 'RTR')}
+                {renderFileDisplay(
+                  module === 'RTR'
+                    ? fileRTR
+                    : module === 'General'
+                    ? fileGeneral
+                    : fileModule1,
+                  module === 'RTR'
+                    ? setFileRTR
+                    : module === 'General'
+                    ? setFileGeneral
+                    : setFileModule1,
+                  module
+                )}
               </Grid>
             </Stack>
-            {renderUploadBox(fileRTR, setFileRTR, 'RTR')}
+            {renderUploadBox(
+              module === 'RTR'
+                ? fileRTR
+                : module === 'General'
+                ? fileGeneral
+                : fileModule1,
+              module === 'RTR'
+                ? setFileRTR
+                : module === 'General'
+                ? setFileGeneral
+                : setFileModule1,
+              module
+            )}
+            {fileRTR && module === 'RTR' ? (
+              <Button
+                variant='contained'
+                color='primary'
+                onClick={() => handleUpload(fileRTR, 'RTR')}
+                sx={{ marginTop: '10px' }}
+              >
+                Upload
+              </Button>
+            ) : null}
+            {fileGeneral && module === 'General' ? (
+              <Button
+                variant='contained'
+                color='primary'
+                onClick={() => handleUpload(fileGeneral, 'General')}
+                sx={{ marginTop: '10px' }}
+              >
+                Upload
+              </Button>
+            ) : null}
+            {fileModule1 && module === 'Module 1' ? (
+              <Button
+                variant='contained'
+                color='primary'
+                onClick={() => handleUpload(fileModule1, 'Module 1')}
+                sx={{ marginTop: '10px' }}
+              >
+                Upload
+              </Button>
+            ) : null}
           </div>
         ))}
       </div>
@@ -188,8 +296,8 @@ const FileUpload = () => {
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Table sx={{ border: 'none' }}>
-                <TableHead>
+              <Table>
+                <TableBody>
                   <TableRow>
                     <TableCell
                       sx={{
@@ -225,8 +333,6 @@ const FileUpload = () => {
                       User Input
                     </TableCell>
                   </TableRow>
-                </TableHead>
-                <TableBody>
                   <TableRow>
                     <TableCell
                       sx={{
@@ -260,7 +366,6 @@ const FileUpload = () => {
                       rowSpan={5}
                     >
                       Check and ensure to submit Environmental Assessment <br />
-                      {/* <Stack direction='row' spacing={1}> */}
                       <FormControlLabel control={<Checkbox />} label='Yes' />
                       <FormControlLabel control={<Checkbox />} label='No' />
                       <Stack
@@ -296,15 +401,16 @@ const FileUpload = () => {
                           <Select
                             value={assessment}
                             label='assessment'
-                            onChange={handleChange}
+                            onChange={(event) =>
+                              setAssessment(event.target.value as string)
+                            }
                           >
-                            <MenuItem value={10}>Ten</MenuItem>
-                            <MenuItem value={20}>Twenty</MenuItem>
-                            <MenuItem value={30}>Thirty</MenuItem>
+                            <MenuItem value='Ten'>Ten</MenuItem>
+                            <MenuItem value='Twenty'>Twenty</MenuItem>
+                            <MenuItem value='Thirty'>Thirty</MenuItem>
                           </Select>
                         </Stack>
                       </Stack>
-                      {/* </Stack> */}
                     </TableCell>
                   </TableRow>
                   <TableRow>

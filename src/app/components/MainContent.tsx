@@ -12,6 +12,7 @@ import {
 import ModuleSelection from './ModuleSelection';
 import FileUpload from './FileUpload';
 import Results from './Results';
+import FileUploadTestComponent from './Check';
 
 const steps = ['Module & Vertical Selection', 'File Upload', 'Results'];
 
@@ -79,7 +80,8 @@ const MainContent: React.FC = () => {
 
       {activeStep === 1 && (
         <div>
-          <FileUpload />
+          <FileUploadTestComponent />
+          {/* <FileUpload /> */}
         </div>
       )}
 
