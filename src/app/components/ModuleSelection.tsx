@@ -35,8 +35,8 @@ const ModuleSelection: React.FC = () => {
 
   const options = [
     {
-      label: 'RTR',
-      value: 'RTR',
+      label: '3.2.P.1',
+      value: '3.2.P.1',
       subOptions: [
         { label: 'Sub RTR 1', value: 'Sub RTR 1' },
         { label: 'Sub RTR 2', value: 'Sub RTR 2' },

@@ -80,8 +80,8 @@ const MainContent: React.FC = () => {
 
       {activeStep === 1 && (
         <div>
-          <FileUploadTestComponent />
-          {/* <FileUpload /> */}
+          {/* <FileUploadTestComponent /> */}
+          <FileUpload />
         </div>
       )}
 

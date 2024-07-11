@@ -44,6 +44,7 @@ const CheckPoints: React.FC = () => {
     setCheckAll(isChecked);
     if (isChecked) {
       const allSelectedRules = regulatoryComplianceRules.map((rule) => ({
+        id: rule.id,
         rule: rule.rule,
         explainerText: rule.explainerText,
       }));
@@ -56,14 +57,14 @@ const CheckPoints: React.FC = () => {
   };
 
   const handleCheckboxChange =
-    (checkpoint: string, explainerText: string) =>
+    (id: string, checkpoint: string, explainerText: string) =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const isChecked = event.target.checked;
       if (isChecked) {
         setCheckedCheckpoints((prevChecked) => [...prevChecked, checkpoint]);
         setSelectedRules((prevRules) => [
           ...prevRules,
-          { rule: checkpoint, explainerText: explainerText },
+          { id: id, rule: checkpoint, explainerText: explainerText },
         ]);
       } else {
         setCheckedCheckpoints((prevChecked) =>
@@ -136,6 +137,7 @@ const CheckPoints: React.FC = () => {
                     <Checkbox
                       checked={checkedCheckpoints.includes(rule.rule)}
                       onChange={handleCheckboxChange(
+                        rule.id,
                         rule.rule,
                         rule.explainerText
                       )}
